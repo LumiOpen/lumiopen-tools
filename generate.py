@@ -29,6 +29,7 @@ def argparser():
     ap.add_argument('--memory-usage', action='store_true')
     ap.add_argument('--show-devices', action='store_true')    
     ap.add_argument('--dtype', choices=DTYPE_MAP.keys(), default='fp32')
+    ap.add_argument('--trust-remote-code', default=None, action='store_true')
     ap.add_argument('model')
     ap.add_argument('file', nargs='?')
     return ap
@@ -77,7 +78,8 @@ def load_model(args):
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
         device_map='auto',
-        torch_dtype=DTYPE_MAP[args.dtype]
+        torch_dtype=DTYPE_MAP[args.dtype],
+        trust_remote_code=args.trust_remote_code,
     )
     return model
 
