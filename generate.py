@@ -60,9 +60,8 @@ def generate(prompts, tokenizer, model, args):
         temperature=args.temperature,
         min_new_tokens=args.min_new_tokens,
         max_new_tokens=args.max_new_tokens,
-        no_repeat_ngram_size=2,
         num_return_sequences=args.num_return_sequences,
-        repetition_penalty=0.9,
+        repetition_penalty=1.2,
     )
 
     for prompt in prompts:
