@@ -18,6 +18,8 @@ DTYPE_MAP = {
     'bf16': torch.bfloat16,
 }
 
+DMAP_CHOICES = ['auto', 'sequential']
+
 
 def argparser():
     ap = ArgumentParser()
@@ -29,6 +31,7 @@ def argparser():
     ap.add_argument('--memory-usage', action='store_true')
     ap.add_argument('--show-devices', action='store_true')    
     ap.add_argument('--dtype', choices=DTYPE_MAP.keys(), default='fp32')
+    ap.add_argument('--device-map', choices=DMAP_CHOICES, default='auto')
     ap.add_argument('--trust-remote-code', default=None, action='store_true')
     ap.add_argument('model')
     ap.add_argument('file', nargs='?')
@@ -77,7 +80,7 @@ def generate(prompts, tokenizer, model, args):
 def load_model(args):
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
-        device_map='auto',
+        device_map=args.device_map,
         torch_dtype=DTYPE_MAP[args.dtype],
         trust_remote_code=args.trust_remote_code,
     )
