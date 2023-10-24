@@ -45,5 +45,5 @@ Test generation with a larger model
 
 ```
     echo "The best life advice I've ever heard is this:" \
-        | python3 generate.py tiiuae/falcon-40b --dtype fp16 --trust-remote-code
+        | python3 generate.py tiiuae/falcon-40b --dtype bf16 --trust-remote-code
 ```
