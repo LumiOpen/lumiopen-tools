@@ -9,16 +9,7 @@ from logging import warning
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
-from utils import timed
-
-
-DTYPE_MAP = {
-    'fp32': torch.float32,
-    'fp16': torch.float16,
-    'bf16': torch.bfloat16,
-}
-
-DMAP_CHOICES = ['auto', 'sequential']
+from utils import timed, load_model, DTYPE_MAP, DMAP_CHOICES
 
 
 def argparser():
@@ -73,17 +64,6 @@ def generate(prompts, tokenizer, model, args):
             text = text.replace(prompt, f'**{prompt}**', 1)
             print(text)
             print('-'*78)
-
-
-@timed
-def load_model(args):
-    model = AutoModelForCausalLM.from_pretrained(
-        args.model,
-        device_map=args.device_map,
-        torch_dtype=DTYPE_MAP[args.dtype],
-        trust_remote_code=args.trust_remote_code,
-    )
-    return model
 
 
 def check_devices(model, args):
