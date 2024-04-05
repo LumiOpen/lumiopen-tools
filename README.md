@@ -53,7 +53,7 @@ output = model(**encoded, labels=encoded.input_ids)
 output.loss
 ```
 
-generation (continuing from above):
+generation with default parameters:
 
 ```
 encoded = tokenizer('Hi, my name is', return_tensors='pt').to(model.device)
