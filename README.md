@@ -22,7 +22,7 @@ Test generation with Poro
 
 ```
 echo "The best life advice I've ever heard is this:" \
-    | python3 generate.py LumiOpen/Poro-34B --dtype fp16 
+    | python3 generate.py LumiOpen/Poro-34B --dtype bf16 
 ```
 
 Interactive examples (setup as above):
