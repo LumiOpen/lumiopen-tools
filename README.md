@@ -26,7 +26,7 @@ from transformers import pipeline
 
 pipe = pipeline(
     'text-generation',
-    'LumiOpen/Poro-34B'
+    'LumiOpen/Poro-34B',
     device_map='auto',
     torch_dtype='auto'
 )
