@@ -15,14 +15,27 @@ Set up environment
 ```
 module use /appl/local/csc/modulefiles
 module load pytorch
-export HF_HOME=/scratch/project_462000319/hf_cache
+export HF_HOME=/scratch/project_462000558/cache
 ```
 
 Test generation with Poro
+with pipeline
 
 ```
+from transformers import pipeline
+
+pipe = pipeline(
+    'text-generation',
+    'LumiOpen/Poro-34B',
+    device_map='auto',
+    torch_dtype='auto'
+)
+pipe('Hei, minun nimeni on')
+
+```
+```
 echo "The best life advice I've ever heard is this:" \
-    | python3 generate.py LumiOpen/Poro-34B --dtype fp16 
+    | python3 generate.py LumiOpen/Poro-34B --dtype bf16 
 ```
 
 Interactive examples (setup as above):
