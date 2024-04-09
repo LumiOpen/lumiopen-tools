@@ -7,7 +7,7 @@ Tools for working with LumiOpen models
 Start an interactive session on a GPU node
 
 ```
-./slurm/gpu-sinteractive-puhti.sh
+./slurm/gpu-sinteractive-lumi.sh
 ```
 
 Set up environment
