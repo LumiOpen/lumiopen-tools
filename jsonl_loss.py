@@ -17,6 +17,7 @@ def argparser():
     ap = ArgumentParser()
     ap.add_argument('--key', default='text')
     ap.add_argument('--verbose', action='store_true')
+    ap.add_argument('--max-length', type=int, default=1024)
     ap.add_argument('model')
     ap.add_argument('jsonl')
     return ap
@@ -45,6 +46,7 @@ def main(argv):
                 padding=False,
                 truncation=True,
                 return_tensors='pt',
+                max_length=args.max_length,
             ).to(model.device)
             
             if encoded.input_ids.shape[1] < 2:
@@ -68,6 +70,6 @@ def main(argv):
     mean = sum(losses)/len(losses)
     print(f'mean loss {mean:.2f} ({len(losses)} values)')
 
-                
+
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
