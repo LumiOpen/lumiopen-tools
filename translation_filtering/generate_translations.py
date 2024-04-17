@@ -66,8 +66,8 @@ def get_translations(dataset, dev_mode, dataset_length):
     appended_dataset = Dataset.from_dict({"translation": translation_dicts})
     # save new dataset to new path
     appended_dataset.save_to_disk(dataset_path=f"{dataset_path}-fi_poro")
-    print(f"New dataset length: {len(appended_dataset["translation"])}")
-    print(f"Example entry: {appended_dataset["translation"][0]}")
+    print("New dataset length: " + str(len(appended_dataset["translation"])))
+    print("Example entry: " + appended_dataset["translation"][0])
 
 
 def main(argv):
