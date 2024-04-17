@@ -6,28 +6,36 @@ import torch
 from datasets import load_dataset, load_from_disk, Dataset
 from pprint import PrettyPrinter
 from transformers import AutoTokenizer, AutoModelForCausalLM
-
-NO_MODEL_DEV_MODE = True
-DATASET_LENGTH = 100
+from argparse import ArgumentParser
 
 default_model = "LumiOpen/Poro-34B"
 pprint = PrettyPrinter(compact=True).pprint
 dataset_path = "../data/europarl_en-fi"
 
 
-def get_translations(dataset):
+def argparser():
+    ap = ArgumentParser(
+        prog="generate_translations.py",
+        description="Script for mass-generating translations with Poro into a dataset."
+    )
+    ap.add_argument('--dev', action='store_true')
+    ap.add_argument('--amount', action='store', required=True)
+    return ap
+
+
+def get_translations(dataset, dev_mode, dataset_length):
     poro_translations = []
 
-    if not NO_MODEL_DEV_MODE:
+    if not dev_mode:
         model = AutoModelForCausalLM.from_pretrained(
             default_model,
             device_map="auto",
-            torch_dtype=torch.bfload16,
+            torch_dtype=torch.bfloat16,
         )
         tokenizer = AutoTokenizer.from_pretrained(model)
         template = "<|user|>Käännä suomeksi: {} <|assistant|>"
 
-        for i in range(DATASET_LENGTH):
+        for i in range(dataset_length):
             prompt = template.format(dataset["translation"][i]["en"])
             encoded = tokenizer(prompt, return_tensors="pt").to(model.device)
             output = model.generate(**encoded, max_length=512)
@@ -39,7 +47,7 @@ def get_translations(dataset):
             pred = pred.rstrip('\n')
             poro_translations.append(pred)
     else:
-        for i in range(DATASET_LENGTH):
+        for i in range(dataset_length):
             # because the model's not running just copy whatever's on "fi"
             poro_translations.append(dataset["translation"][i]["fi"])
 
@@ -55,24 +63,22 @@ def get_translations(dataset):
     print(appended_dataset["translation"][0])
 
 
-def main():
-    if NO_MODEL_DEV_MODE:
+def main(argv):
+    args = argparser().parse_args(argv[1:])
+    dataset_length = int(args.amount)
+    dev_mode = bool(args.dev)
+
+    if dev_mode:
         print("Running on development mode, no model will be loaded.")
     if not os.path.exists(dataset_path):
         print("Didn't find already downloaded dataset. Downloading...")
-        dataset = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train[:100]")
+        dataset = load_dataset("Helsinki-NLP/europarl", "en-fi", split=f"train[:{dataset_length}]")
         pprint(dataset)
         dataset.save_to_disk(dataset_path=dataset_path)
     dataset = load_from_disk(dataset_path=dataset_path)
 
-    templates = {
-        "translate": "<|user|>Käännä suomeksi: {} <|assistant|>",
-        "fix_translation": '<|poor_translation|>{} <|good_translation|>'
-    }
-    template = templates["translate"]
-
-    get_translations(dataset)
+    get_translations(dataset, dev_mode, dataset_length)
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main(sys.argv))
