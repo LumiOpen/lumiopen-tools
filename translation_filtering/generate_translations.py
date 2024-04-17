@@ -32,7 +32,7 @@ def get_translations(dataset, dev_mode, dataset_length):
             device_map="auto",
             torch_dtype=torch.bfloat16,
         )
-        tokenizer = AutoTokenizer.from_pretrained(model)
+        tokenizer = AutoTokenizer.from_pretrained(default_model)
         template = "<|user|>Käännä suomeksi: {} <|assistant|>"
 
         for i in range(dataset_length):
@@ -46,6 +46,10 @@ def get_translations(dataset, dev_mode, dataset_length):
                 pred = pred[:-len(tokenizer.eos_token)]
             pred = pred.rstrip('\n')
             poro_translations.append(pred)
+
+            print(f"{i+1} / {dataset_length}")
+            print(dataset["translation"][i]["en"])
+            print(f"{pred}\n")
     else:
         for i in range(dataset_length):
             # because the model's not running just copy whatever's on "fi"
@@ -54,13 +58,16 @@ def get_translations(dataset, dev_mode, dataset_length):
     # declare dict from dataset and duplicate
     translation_dicts = dataset["translation"]
     for i, translation_dict in enumerate(translation_dicts):
+        if i == dataset_length:
+            break
         # append poro translations to duplicated dict
         translation_dict["fi_poro"] = poro_translations[i]
     # create new dataset with appended translations
     appended_dataset = Dataset.from_dict({"translation": translation_dicts})
     # save new dataset to new path
     appended_dataset.save_to_disk(dataset_path=f"{dataset_path}-fi_poro")
-    print(appended_dataset["translation"][0])
+    print(f"New dataset length: {len(appended_dataset["translation"])}")
+    print(f"Example entry: {appended_dataset["translation"][0]}")
 
 
 def main(argv):
