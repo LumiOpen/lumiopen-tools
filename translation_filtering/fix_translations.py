@@ -77,9 +77,10 @@ def translate(stream, tokenizer, model, args):
         encoded = tokenizer(prompt, return_tensors='pt').to(model.device)
         output = model.generate(
             **encoded,
-            max_length=256,
+            max_length=1024,
             do_sample=True,
-            repetition_penalty=2.0
+            repetition_penalty=2.0,
+            max_new_tokens=512
         )
         decoded = tokenizer.decode(output[0])
 
