@@ -14,7 +14,7 @@ DEFAULT_MODEL = 'LumiOpen/Poro-34B'
 
 TEMPLATES = {
     "default": '<|prompt|>Seuraava syöteteksti on huonosti käännettyä suomen kieltä. Tehtäväsi on muokata teksti '
-               'niin, että se on kieliopillisesti oikeellinen, ja kuulostaa luonnolliselta.<|input|>Tämä on hieno '
+               'niin, että se on kieliopillisesti oikeellinen, ja kuulostaa luonnolliselta. <|input|>Tämä on hieno '
                'kysymys, johon ei ole yhtä oikeaa vastausta. Patentin vahvuus tulee kyvystä panna se täytäntöön. Jos '
                'patentinhaltija ei jostain syystä (kuten rahoituksen puutteesta) voi panna sitä täytäntöön, '
                'patentti on käytännössä hampaaton. Mutta kilpailijasi eivät todennäköisesti tiedä sitä. He voivat '
@@ -29,7 +29,7 @@ TEMPLATES = {
                'heitä loukkaamasta sitä, koska he olettavat että haastat heidät oikeuteen. Tällainen kilpailua '
                'hillitsevä vaikutus voi olla sinulle arvokas. Lisäksi, jos patenttia on loukattu, saatat saada aikaan '
                'lisenssisopimuksen ilman oikeudenkäyntiä. Tämä voi olla erittäin tuottoisa liiketoimintamalli, '
-               'joten patentoinnin kustannukset saattavat olla perusteltuja.<|input|>'
+               'joten patentoinnin kustannukset saattavat olla perusteltuja. <|input|>{} <|output|>'
 }
 
 
@@ -42,8 +42,35 @@ def argparser():
 
 def translate(stream, tokenizer, model, args):
     template = TEMPLATES["default"]
+    test_inputs = ["Opit hyvin nopeasti, että olla akateeminen on muutakin kuin vain tutkimuspapereiden "
+                   "kirjoittamista. Sinun aikasi postdocina on silloin, kun voit alkaa oppia näistä muista "
+                   "näkökohdista samalla kun rakennat omaa profiiliasi.Jälkidokumentin on tehtävä seuraava: Rakenna "
+                   "julkaisutietue. Tämä koskee sekä sitä, mistä sinulle maksetaan, että omaa tutkimuslinjaasi. "
+                   "Osallistu opiskelijoiden ohjaamiseen. Auta tohtoreiden kanssa laboratoriossa ja osallistu "
+                   "maisteriopiskelijoiden ohjaamiseen. Osallistu rahoituksen saamiseen. Tämä voi tapahtua joko "
+                   "auttamalla työnantajaasi tai (mieluiten) hankkimalla omaa rahoitusta. Rakenna kansainvälistä "
+                   "mainetta. Aloita yhteistyö ulkopuolisten osapuolten kanssa. Hanki opetuskokemusta. Tämä on "
+                   "ehdottoman tärkeää, jos haluat tiedekunnan paikan.",
+                   "Tämä kaveri väittää, että 1-6 toiston alueella työskentelevät olympiavoimannostajat voivat lisätä "
+                   "voimaa lisäämättä lihaskokoa. Esimerkiksi koulutetuilla olympianostijoilla havaittiin kahden "
+                   "vuoden aikana merkittävää voimanlisäystä ja tuskin havaittavissa olevaa lihasmassan kasvua ("
+                   "Hakkinen et al, 1988). Minulla oli samanlainen kokemus, kun käytin AST:n Max-OT-päämiehiä. "
+                   "Voimani lisääntyivät aivan hulluna, mutta koko kasvoi hyvin vähän. Ilmeisesti perinteinen "
+                   "voimaharjoittelu alhaisella volyymillä ja matalilla sarjoilla (1-6 toistoa, 3 tai vähemmän "
+                   "sarjaa) ei ole paras tapa. Voimaharjoittelu aiheuttaa hypertrofiaa (Hakkinen et al, 1985), "
+                   "mutta se ei aiheuta maksimaalista hypertrofiaa. Mikä on tieteellinen selitys tälle? Onko "
+                   "käänteinen totta? Eli voiko harrastaja (jolla on paljon näkyvää lihaksia) todella olla heikko?",
+                   "Tässä on joitain yleisiä huolenaiheita puiden istutushankkeiden käyttämisestä hiilidioksidin "
+                   "kompensoimiseen: Järjestelmällä on itse asiassa myönteinen nettovaikutus sekä lyhyellä että "
+                   "pitkällä aikavälillä. Puunistutusjärjestelmän tehokkuus hiilidioksidin talteenottamisessa ja "
+                   "varastoinnissa riippuu suurelta osin siitä, mitä puille tapahtuu istutuksen jälkeen. Kun puut "
+                   "kypsyvät ja niistä korjataan rakentamisessa käytettävää puuta, talteen otettu hiilidioksidi "
+                   "varastoidaan pitkään (kunnes puu hajoaa tai poltetaan). Jos puita ei kuitenkaan istuteta "
+                   "uudelleen korjuun jälkeen, sillä on ollut vain kertaluonteinen vaikutus. Myös puuta poltettaessa "
+                   "(energiaksi tai villitulessa) tai jos puut kuolevat nopeasti ja hajoavat, niiden talteenotettu "
+                   "hiili vapautuu uudelleen."]
 
-    for line in stream:
+    for line in test_inputs:
         line = line.rstrip('\n')
         prompt = template.format(line)
 
