@@ -18,7 +18,9 @@ def translate(data: list[dict[str, int | list]], tokenizer: PreTrainedTokenizerF
     results = []
     for idx, band in enumerate(data):
         band_dict = {
-            "band_no": idx,
+            "band_loc": data[idx]["band_loc"],
+            "band_no": data[idx]["band_no"],
+            "median_len": data[idx]["median_len"],
             "entries": []
         }
         for entry in band["entries"]:
