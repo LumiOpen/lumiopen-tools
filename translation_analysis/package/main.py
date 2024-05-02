@@ -3,7 +3,7 @@
 
 import os
 import sys
-import jsonlines
+import json
 import torch
 import logging
 from datasets import load_dataset, load_from_disk
@@ -51,9 +51,9 @@ def main():
     sampled_data = picker(dframe=df, bands=bands, per=per_band, thold=0.02)
     # pprint(sampled_data)
 
-    with jsonlines.open(f"{DATA_PATH}/out/sampled_entries.jsonl", mode='w') as writer:
-        writer.write_all(sampled_data)
-    del writer
+    with open(f"{DATA_PATH}/out/sampled_entries.jsonl", mode='w') as file:
+        json.dump(sampled_data, file)
+    del file
 
     tokenizer = AutoTokenizer.from_pretrained(DEFAULT_MODEL)
     model = AutoModelForCausalLM.from_pretrained(
@@ -65,9 +65,9 @@ def main():
 
     translated_data = translate(data=sampled_data, tokenizer=tokenizer, model=model)
 
-    with jsonlines.open(f"{DATA_PATH}/out/translated_entries.jsonl", mode='w') as writer:
-        writer.write_all(translated_data)
-    del writer
+    with open(f"{DATA_PATH}/out/translated_entries.jsonl", mode='w') as file:
+        json.dump(translated_data, file)
+    del file
 
     # TODO:
     # Use Poro to translate English texts to Finnish // kinda done
