@@ -51,10 +51,10 @@ def picker(dframe: pd.DataFrame, bands: int, per: int, thold: float):
         low_t = int(band_loc * (1 - thold))
 
         for i in range(per):
-            flag = True  # used to assure the following loop runs at least once, essentially a do-while
+            random_index_found = False  # used to assure the following loop runs at least once, essentially a do-while
             rand_idx = 0
 
-            while flag:
+            while not random_index_found:
                 rand_idx = int(random.uniform(low_t, high_t))
 
                 if rand_idx in rand_idxs:
@@ -65,7 +65,7 @@ def picker(dframe: pd.DataFrame, bands: int, per: int, thold: float):
                     sleep(0.5)
                 else:
                     rand_idxs.append(rand_idx)
-                    flag = False
+                    random_index_found = True
 
             entry_list.append(df_list[rand_idx])
 

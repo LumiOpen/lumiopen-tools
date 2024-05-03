@@ -161,4 +161,5 @@ cython_debug/
 .idea/
 data/europarl_en-fi/
 data/europarl_en-fi-fi_poro/
+data/elrc-norden_en-fi/
 data/out/
