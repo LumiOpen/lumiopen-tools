@@ -7,11 +7,17 @@ import sys
 import logging
 from argparse import ArgumentParser
 from pprint import PrettyPrinter
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+import json
 
 from t_picker import picker
 from t_translate import translate
 import europarl
 import elrcnorden
+
+DATA_PATH = "../../data"
+DEFAULT_MODEL = "LumiOpen/Poro-34B"
 
 # Logging settings
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -24,7 +30,9 @@ def argparser():
     ap.add_argument("-p", "--per", default=10)
     ap.add_argument("-b", "--bands", default=10)
     ap.add_argument("-t", "--thold", default=0.03)
-    ap.add_argument("-m", "--minlen", default=10)
+    ap.add_argument("-l", "--minlen", default=10)
+    ap.add_argument("-m", "--model", default=DEFAULT_MODEL)
+    ap.add_argument("--dry", dest="dry_run", action="store_true",default=False)
     return ap
 
 
@@ -35,12 +43,29 @@ def main(argv):
                  f"dataset: {args.dataset}")
     match args.dataset:
         case "europarl":
-            europarl.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
+            sampled_data = europarl.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
         case "elrcnord":
-            elrcnorden.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
+            sampled_data = elrcnorden.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
         case _:
             logging.error("Match-case defaulted somehow (???). Program will exit.")
             sys.exit(1)
+
+    if not args.dry_run:
+        tokenizer = AutoTokenizer.from_pretrained(args.model)
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model,
+            device_map="auto",
+            torch_dtype=torch.bfloat16,
+        )
+        logging.info(f"Model {args.model} loaded.")
+
+        translated_data = translate(data=sampled_data, tokenizer=tokenizer, model=model)
+
+        with open(f"{DATA_PATH}/out/translated_entries.json", mode='w') as file:
+            json.dump(translated_data, file, ensure_ascii=False)
+        del file
+    else:
+        logging.info("Skipped translation due to dry run being toggled.")
 
 
 if __name__ == "__main__":

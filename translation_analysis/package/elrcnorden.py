@@ -29,7 +29,7 @@ def main(per: int, bands: int, thold: float, minlen: int):
     :param bands: The amount of examination points where samples should be taken, i.e. resolution.
     :param thold: The amount of variation (percentage).
     :param minlen: Minimum string length for samples
-    :return: Void
+    :return: Sampled dataset data
     """
 
     if not os.path.isfile(FI_DATASET_PATH) and os.path.isfile(EN_DATASET_PATH):
@@ -57,9 +57,11 @@ def main(per: int, bands: int, thold: float, minlen: int):
 
     sampled_data = picker(dframe=df, bands=bands, per=per, thold=thold)
 
-    with open(f"{DATA_PATH}/out/sampled_entries.json", mode='w') as file:
+    with open(f"{DATA_PATH}/out/elrc-norden_sampled_entries.json", mode='w') as file:
         json.dump(sampled_data, file, ensure_ascii=False)
     del file
+
+    return sampled_data
 
 
 if __name__ == "__main__":

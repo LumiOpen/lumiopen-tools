@@ -4,10 +4,8 @@
 import os
 import sys
 import json
-import torch
 import logging
 from datasets import load_dataset, load_from_disk
-from transformers import AutoTokenizer, AutoModelForCausalLM
 import matplotlib.pyplot as plt
 import pandas as pd
 import evaluate
@@ -16,7 +14,6 @@ from t_picker import picker
 from t_translate import translate
 
 # Globals
-DEFAULT_MODEL = "LumiOpen/Poro-34B"
 DATA_PATH = "../../data"
 DATASET_NAME = "Helsinki-NLP/europarl"
 DATASET_PATH = f"{DATA_PATH}/europarl_en-fi"
@@ -33,7 +30,7 @@ def main(per: int, bands: int, thold: float, minlen: int):
     :param bands: The amount of examination points where samples should be taken, i.e. resolution.
     :param thold: The amount of variation (percentage).
     :param minlen: Minimum string length for samples
-    :return: Void
+    :return: Sampled dataset data
     """
 
     # Check if downloaded original dataset already exists
@@ -57,24 +54,12 @@ def main(per: int, bands: int, thold: float, minlen: int):
     sampled_data = picker(dframe=df, bands=bands, per=per, thold=thold)
     # pprint(sampled_data)
 
-    with open(f"{DATA_PATH}/out/sampled_entries.json", mode='w') as file:
+    with open(f"{DATA_PATH}/out/europarl_sampled_entries.json", mode='w') as file:
         json.dump(sampled_data, file, ensure_ascii=False)
     del file
 
-    if False:  # TODO move these to another script
-        tokenizer = AutoTokenizer.from_pretrained(DEFAULT_MODEL)
-        model = AutoModelForCausalLM.from_pretrained(
-            DEFAULT_MODEL,
-            device_map="auto",
-            torch_dtype=torch.bfloat16,
-        )
-        logging.info(f"Model {DEFAULT_MODEL} loaded.")
+    return sampled_data
 
-        translated_data = translate(data=sampled_data, tokenizer=tokenizer, model=model)
-
-        with open(f"{DATA_PATH}/out/translated_entries.json", mode='w') as file:
-            json.dump(translated_data, file, ensure_ascii=False)
-        del file
 
     # TODO:
     # Use Poro to translate English texts to Finnish // kinda done
