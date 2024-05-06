@@ -2,6 +2,10 @@
 # MIT ©2024 Joona Kytöniemi
 
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
+import logging
+import sys
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 def translate(data: list[dict[str, int | list]], tokenizer: PreTrainedTokenizerFast, model):
@@ -16,14 +20,15 @@ def translate(data: list[dict[str, int | list]], tokenizer: PreTrainedTokenizerF
     template = "<|user|>Käännä suomeksi: {} <|assistant|>"
 
     results = []
-    for idx, band in enumerate(data):
+    for i, band in enumerate(data):
         band_dict = {
-            "band_loc": data[idx]["band_loc"],
-            "band_no": data[idx]["band_no"],
-            "median_len": data[idx]["median_len"],
+            "band_loc": data[i]["band_loc"],
+            "band_no": data[i]["band_no"],
+            "median_len": data[i]["median_len"],
             "entries": []
         }
-        for entry in band["entries"]:
+        for j, entry in enumerate(band["entries"]):
+            logging.info(f"Translating entry no. {j} in band no. {i}.")
             en_text = entry[0]
             prompt = template.format(en_text)
 
