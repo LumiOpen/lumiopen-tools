@@ -61,12 +61,6 @@ def main(per: int, bands: int, thold: float, minlen: int):
     return sampled_data
 
 
-    # TODO:
-    # Use Poro to translate English texts to Finnish // kinda done
-    # Calculate BLEU of already translated text and Poro translated text, compare
-        # Use Google GLEU metric for this thing because they claim better performance with sentence-by-sentence stuff
-    # Draw graph or get values to draw one
-
-
 if __name__ == "__main__":
-    main()
+    # Some default values
+    main(per=10, bands=10, thold=0.03, minlen=10)

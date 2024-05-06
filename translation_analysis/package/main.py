@@ -13,8 +13,11 @@ import json
 
 from t_picker import picker
 from t_translate import translate
-import europarl
-import elrcnorden
+import d_europarl
+import d_elrcnorden
+import d_ted2020
+import d_opensubtitles
+import d_elrc_fi_info
 
 DATA_PATH = "../../data"
 DEFAULT_MODEL = "LumiOpen/Poro-34B"
@@ -25,7 +28,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 def argparser():
     ap = ArgumentParser()
-    data_choices = ["europarl", "elrcnord"]
+    data_choices = ["europarl", "elrcnord", "ted2020", "opensubtitles", "elrcfinfo"]
     ap.add_argument("-d", "--dataset", choices=data_choices, required=True)
     ap.add_argument("-p", "--per", default=10)
     ap.add_argument("-b", "--bands", default=10)
@@ -43,9 +46,16 @@ def main(argv):
                  f"dataset: {args.dataset}")
     match args.dataset:
         case "europarl":
-            sampled_data = europarl.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
+            sampled_data = d_europarl.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
         case "elrcnord":
-            sampled_data = elrcnorden.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
+            sampled_data = d_elrcnorden.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
+        case "ted2020":
+            sampled_data = d_ted2020.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
+        case "elrcfinfo":
+            sampled_data = d_elrc_fi_info.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
+        case "opensubtitles":
+            # Discouraged
+            sampled_data = d_opensubtitles.main(int(args.per), int(args.bands), float(args.thold), int(args.minlen))
         case _:
             logging.error("Match-case defaulted somehow (???). Program will exit.")
             sys.exit(1)
@@ -66,6 +76,13 @@ def main(argv):
         del file
     else:
         logging.info("Skipped translation due to dry run being toggled.")
+
+    return 0
+
+    # TODO:
+    # Use Poro to translate English texts to Finnish // kinda done
+    # Calculate spBLEU of already translated text and Poro translated text, compare
+    # Draw graph or get values to draw one
 
 
 if __name__ == "__main__":

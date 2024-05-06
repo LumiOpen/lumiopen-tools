@@ -30,8 +30,6 @@ def translate(data: list[dict[str, int | list]], tokenizer: PreTrainedTokenizerF
             encoded = tokenizer(prompt, return_tensors='pt').to(model.device)
             output = model.generate(
                 **encoded,
-                do_sample=True,
-                repetition_penalty=2.0,
                 max_new_tokens=256
             )
             decoded = tokenizer.decode(output[0])

@@ -5,25 +5,19 @@ import os
 import sys
 import json
 import logging
-from datasets import load_dataset, load_from_disk
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import matplotlib.pyplot as plt
 import pandas as pd
-import evaluate
 
 from t_picker import picker
-from t_translate import translate
 
 # Globals
-DEFAULT_MODEL = "LumiOpen/Poro-34B"
 DATA_PATH = "../../data"
-FI_DATASET_PATH = f"{DATA_PATH}/elrc-norden_en-fi/ELRC-www.norden.org.en-fi.fi"
-EN_DATASET_PATH = f"{DATA_PATH}/elrc-norden_en-fi/ELRC-www.norden.org.en-fi.en"
+FI_DATASET_PATH = f"{DATA_PATH}/ted2020_en-fi/TED2020.en-fi.fi"
+EN_DATASET_PATH = f"{DATA_PATH}/ted2020_en-fi/TED2020.en-fi.en"
 
 
 def main(per: int, bands: int, thold: float, minlen: int):
     """
-    Handler script for ELRC-Norden.
+    Handler script for TED2020.
 
     :param per: The amount of samples taken around one single band.
     :param bands: The amount of examination points where samples should be taken, i.e. resolution.
@@ -33,7 +27,7 @@ def main(per: int, bands: int, thold: float, minlen: int):
     """
 
     if not os.path.isfile(FI_DATASET_PATH) and os.path.isfile(EN_DATASET_PATH):
-        logging.error("ELRC-Norden dataset files could not be found. Program will now exit.")
+        logging.error("TED2020 dataset files could not be found. Program will now exit.")
         sys.exit(1)
 
     with open(FI_DATASET_PATH) as file:
@@ -57,7 +51,7 @@ def main(per: int, bands: int, thold: float, minlen: int):
 
     sampled_data = picker(dframe=df, bands=bands, per=per, thold=thold)
 
-    with open(f"{DATA_PATH}/out/elrc-norden_sampled_entries.json", mode='w') as file:
+    with open(f"{DATA_PATH}/out/ted2020_sampled_entries.json", mode='w') as file:
         json.dump(sampled_data, file, ensure_ascii=False)
     del file
 
@@ -65,4 +59,5 @@ def main(per: int, bands: int, thold: float, minlen: int):
 
 
 if __name__ == "__main__":
-    main()
+    # Some default values
+    main(per=10, bands=10, thold=0.03, minlen=10)
