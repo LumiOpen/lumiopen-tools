@@ -52,7 +52,7 @@ def main(per: int, bands: int, thold: float, minlen: int):
 
     sampled_data = picker(dframe=df, bands=bands, per=per, thold=thold)
 
-    with open(f"{DATA_PATH}/out/elrc-fi_info_sampled_entries.json", mode='w') as file:
+    with open(f"{DATA_PATH}/out/elrc-fi-info_sampled_entries.json", mode='w') as file:
         json.dump(sampled_data, file, ensure_ascii=False)
 
     return sampled_data

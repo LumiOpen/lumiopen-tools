@@ -30,6 +30,9 @@ def main(argv):
 
     sampled_data = json.load(args.file)
 
+    # eughhh
+    dataset_name = args.file.name.split('/')[-1].split('_')[0]
+
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
@@ -40,7 +43,7 @@ def main(argv):
 
     translated_data = translate(data=sampled_data, tokenizer=tokenizer, model=model)
 
-    with open(f"{DATA_PATH}/out/translated_entries.json", mode='w') as file:
+    with open(f"{DATA_PATH}/out/{dataset_name}_translated_entries.json", mode='w') as file:
         json.dump(translated_data, file, ensure_ascii=False)
 
 
