@@ -56,7 +56,6 @@ def main(per: int, bands: int, thold: float, minlen: int):
 
     with open(f"{DATA_PATH}/out/europarl_sampled_entries.json", mode='w') as file:
         json.dump(sampled_data, file, ensure_ascii=False)
-    del file
 
     return sampled_data
 

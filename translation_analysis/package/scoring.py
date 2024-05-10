@@ -15,9 +15,9 @@ def data_loader(path_list: []):
 
 
 path_list = [
-    f"{DATA_PATH}/elrc-fi_info_merged_entries.json",
-    f"{DATA_PATH}/elrc-norden_merged_entries.json",
-    f"{DATA_PATH}/europarl_merged_entries.json",
+    # f"{DATA_PATH}/elrc-fi_info_merged_entries.json",
+    # f"{DATA_PATH}/elrc-norden_merged_entries.json",
+    # f"{DATA_PATH}/europarl_merged_entries.json",
     f"{DATA_PATH}/ted2020_merged_entries.json"
 ]
 
@@ -41,7 +41,7 @@ for k, data in enumerate(data_array):
             band_scores.append(float(curr_res.score))
             del curr_res
         band_avg = sum(band_scores) / len(band_scores)
-        band_avgs.append(band_avg)
+        band_avgs.append((band_avg, band["median_len"]))
         print(f"-> Band {band["band_no"]} avg BLEU: {band_avg}.")
     band_avgs_list.append(band_avgs)
 

@@ -59,10 +59,10 @@ def picker(dframe: pd.DataFrame, bands: int, per: int, thold: float):
 
                 if rand_idx in rand_idxs:
                     logging.warning(f"Detected random index clash! Sleeping a bit before retry. (band_no: {band_no})")
-                    sleep(0.5)
+                    sleep(0.25)
                 elif rand_idx > df_len-1:
                     logging.warning("Random index was higher than the dataset length! Sleeping a bit before retry.")
-                    sleep(0.5)
+                    sleep(0.25)
                 else:
                     rand_idxs.append(rand_idx)
                     random_index_found = True
