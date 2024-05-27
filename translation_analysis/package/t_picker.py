@@ -45,7 +45,7 @@ def picker(dframe: pd.DataFrame, bands: int, per: int, thold: float):
 
         phase_dict["band_loc"] = band_loc
         phase_dict["band_no"] = band_no
-        phase_dict["median_len"] = len(df_list[band_loc][0])
+        phase_dict["median_len"] = len(df_list[band_loc][0].split())
 
         high_t = int(band_loc * (thold + 1))
         low_t = int(band_loc * (1 - thold))

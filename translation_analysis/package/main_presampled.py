@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # MIT ©2024 Joona Kytöniemi
+
 import argparse
 import sys
 import logging

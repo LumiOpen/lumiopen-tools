@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# MIT ©2024 Joona Kytöniemi
+
 import sys
 import sacrebleu
 import json
@@ -15,10 +18,11 @@ def data_loader(path_list: []):
 
 
 path_list = [
-    # f"{DATA_PATH}/elrc-fi_info_merged_entries.json",
-    # f"{DATA_PATH}/elrc-norden_merged_entries.json",
-    # f"{DATA_PATH}/europarl_merged_entries.json",
-    f"{DATA_PATH}/ted2020_merged_entries.json"
+    f"{DATA_PATH}/elrc-fi-info_merged_entries.json",
+    f"{DATA_PATH}/elrc-norden_merged_entries.json",
+    f"{DATA_PATH}/europarl_merged_entries.json",
+    f"{DATA_PATH}/ted2020_merged_entries.json",
+    f"{DATA_PATH}/tatoeba_merged_entries.json"
 ]
 
 data_array = data_loader(path_list)

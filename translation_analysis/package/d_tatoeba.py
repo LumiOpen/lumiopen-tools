@@ -14,7 +14,7 @@ DATA_PATH = "../../data"
 DATASET_PATH = f"{DATA_PATH}/tatoeba/tatoeba-test-v2023-09-26.eng-fin.txt"
 
 
-def main(per: int, bands: int, thold: float, minlen: int):
+def main(per: int, bands: int, thold: float, minwords: int):
     if not os.path.isfile(DATASET_PATH):
         logging.error("Tatoeba dataset file could not be found. Program will now exit.")
         sys.exit(1)
@@ -34,9 +34,9 @@ def main(per: int, bands: int, thold: float, minlen: int):
                     sample["fi"] = entry
             data.append(sample)
 
-    sorted_list = sorted(data, key=lambda d: len(d["en"]))
+    sorted_list = sorted(data, key=lambda d: len(str(d["en"]).split()))
     # Drop every sample with the length < 10
-    filtered_list = [d for d in sorted_list if len(d["en"]) >= minlen]
+    filtered_list = [d for d in sorted_list if len(str(d["en"]).split()) >= minwords]
     # Make a DataFrame out of the list (the warning shouldn't matter)
     df = pd.DataFrame.from_dict(filtered_list)
     # self-explanatory
@@ -52,4 +52,4 @@ def main(per: int, bands: int, thold: float, minlen: int):
 
 if __name__ == "__main__":
     # Some default values
-    main(per=10, bands=10, thold=0.03, minlen=10)
+    main(per=10, bands=10, thold=0.03, minwords=2)

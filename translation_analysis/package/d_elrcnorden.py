@@ -16,14 +16,14 @@ FI_DATASET_PATH = f"{DATA_PATH}/elrc-norden_en-fi/ELRC-www.norden.org.en-fi.fi"
 EN_DATASET_PATH = f"{DATA_PATH}/elrc-norden_en-fi/ELRC-www.norden.org.en-fi.en"
 
 
-def main(per: int, bands: int, thold: float, minlen: int):
+def main(per: int, bands: int, thold: float, minwords: int):
     """
     Handler script for ELRC-Norden.
 
     :param per: The amount of samples taken around one single band.
     :param bands: The amount of examination points where samples should be taken, i.e. resolution.
     :param thold: The amount of variation (percentage).
-    :param minlen: Minimum string length for samples
+    :param minwords: Minimum string length for samples
     :return: Sampled dataset data
     """
 
@@ -42,9 +42,9 @@ def main(per: int, bands: int, thold: float, minlen: int):
     # Merge the two lists into list of dicts
     merged_list = [{"en": en_list[i], "fi": fi_list[i]} for i in range(0, len(en_list))]
     # Sort the dictionary based on the length of the value of "en"
-    sorted_list = sorted(merged_list, key=lambda d: len(d["en"]))
+    sorted_list = sorted(merged_list, key=lambda d: len(str(d["en"]).split()))
     # Drop every sample with the length < 10
-    filtered_list = [d for d in sorted_list if len(d["en"]) >= minlen]
+    filtered_list = [d for d in sorted_list if len(str(d["en"]).split()) >= minwords]
     # Make a DataFrame out of the list (the warning shouldn't matter)
     df = pd.DataFrame.from_dict(filtered_list)
     # self-explanatory
@@ -60,4 +60,4 @@ def main(per: int, bands: int, thold: float, minlen: int):
 
 if __name__ == "__main__":
     # Some default values
-    main(per=10, bands=10, thold=0.03, minlen=10)
+    main(per=10, bands=10, thold=0.03, minwords=2)

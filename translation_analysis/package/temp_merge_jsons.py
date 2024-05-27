@@ -17,4 +17,4 @@ for i, band in enumerate(sampled):
         sampled[i]["entries"][j].append(transd[i]["entries"][j])
 
 with open(f"{data_path}/{curr_file}_merged_entries.json", "w+") as file:
-    json.dump(sampled, file)
+    json.dump(sampled, file, ensure_ascii=False)

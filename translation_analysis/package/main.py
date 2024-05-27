@@ -34,7 +34,7 @@ def argparser():
     ap.add_argument("-p", "--per", default=10)
     ap.add_argument("-b", "--bands", default=10)
     ap.add_argument("-t", "--thold", default=0.03)
-    ap.add_argument("-l", "--minlen", default=10)
+    ap.add_argument("-l", "--minlen", default=2)
     ap.add_argument("-m", "--model", default=DEFAULT_MODEL)
     ap.add_argument("--dry", dest="dry_run", action="store_true",default=False)
     return ap
