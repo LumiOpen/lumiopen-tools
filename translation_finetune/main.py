@@ -2,7 +2,6 @@
 # MIT ©2024 Joona Kytöniemi
 
 import sys
-import logging
 import torch
 import random
 
@@ -17,7 +16,9 @@ from transformers import (
     Trainer,
 )
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+from accelerate import logging
+
+logger = logging.get_logger(__name__)
 DEFAULT_MODEL = 'LumiOpen/Poro-34B'
 
 
@@ -57,10 +58,12 @@ def prepper(data):
 def main(argv):
     args = argparser().parse_args(argv[1:])
 
-    ds = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train")
-    ds = ds.shuffle(random.seed(5834))
+    logger.info(f"Model name: {args.model}")
 
-    data = prepper(data=ds.select(range(10000)))
+    ds = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train")
+    ds = ds.shuffle(random.seed(5834))  # Shuffle dataset
+
+    data = prepper(data=ds.select(range(10000)))    # Limit amount of samples
 
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
@@ -115,6 +118,10 @@ def main(argv):
 
     result = trainer.evaluate()
     print(f'loss after training: {result["eval_loss"]:.2f}')
+
+    # Save model
+    trainer.save_state()
+    trainer.save_model()
 
 
 if __name__ == '__main__':
