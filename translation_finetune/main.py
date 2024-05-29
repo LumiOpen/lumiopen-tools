@@ -17,6 +17,7 @@ from transformers import (
 )
 
 from accelerate import logging
+import deepspeed
 
 logger = logging.get_logger(__name__)
 DEFAULT_MODEL = 'LumiOpen/Poro-34B'
@@ -84,8 +85,7 @@ def main(argv):
 
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
-        device_map='auto',
-        torch_dtype='auto',
+        torch_dtype="auto",
     )
 
     collator = DataCollatorForLanguageModeling(
