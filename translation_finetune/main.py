@@ -16,10 +16,6 @@ from transformers import (
     Trainer,
 )
 
-from accelerate import logging
-import deepspeed
-
-logger = logging.get_logger(__name__)
 DEFAULT_MODEL = 'LumiOpen/Poro-34B'
 
 
@@ -58,8 +54,6 @@ def prepper(data):
 
 def main(argv):
     args = argparser().parse_args(argv[1:])
-
-    logger.info(f"Model name: {args.model}")
 
     ds = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train")
     ds = ds.shuffle(random.seed(5834))  # Shuffle dataset
