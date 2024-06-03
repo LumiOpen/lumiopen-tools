@@ -6,14 +6,17 @@ import torch
 import random
 
 from argparse import ArgumentParser
+from accelerate import Accelerator
+from torch.utils.data import DataLoader
+from torch.optim import AdamW
+from transformers import get_linear_schedule_with_warmup
+from tqdm import tqdm
 
 from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     DataCollatorForLanguageModeling,
-    TrainingArguments,
-    Trainer,
 )
 
 DEFAULT_MODEL = 'LumiOpen/Poro-34B'
@@ -24,6 +27,7 @@ def argparser():
     ap.add_argument('--key', default='text')
     ap.add_argument('--verbose', action='store_true')
     ap.add_argument('--max-length', type=int, default=1024)
+    ap.add_argument("--batch_size", "-b", type=int, default=16)
     ap.add_argument('--model', default=DEFAULT_MODEL)
     return ap
 
@@ -53,14 +57,12 @@ def prepper(data):
 
 
 def main(argv):
+    accelerator = Accelerator()
     args = argparser().parse_args(argv[1:])
+    tokenizer = AutoTokenizer.from_pretrained(args.model)
 
     ds = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train")
     ds = ds.shuffle(random.seed(5834))  # Shuffle dataset
-
-    data = prepper(data=ds.select(range(10000)))    # Limit amount of samples
-
-    tokenizer = AutoTokenizer.from_pretrained(args.model)
 
     def tokenize(example):
         return tokenizer(
@@ -69,13 +71,27 @@ def main(argv):
             truncation=True,
         )
 
-    data_train_tokenized = list(map(tokenize, data["train"]))
-    data_test_tokenized = list(map(tokenize, data["test"]))
+    def preprocess(dataset):
+        data = prepper(data=dataset.select(range(10000)))  # Limit amount of samples
+        data_train_tokenized = list(map(tokenize, data["train"]))
+        data_test_tokenized = list(map(tokenize, data["test"]))
+        return [data_train_tokenized, data_test_tokenized]
 
     # print(data["train"][0])
     # print(data["test"][0])
     # print(f"{type(data_train_tokenized)}: {data_train_tokenized[0]}")
     # print(f"{type(data_test_tokenized)}: {data_test_tokenized[0]}")
+
+    with accelerator.main_process_first():
+        tokenized_datasets = ds.map(
+            preprocess,
+            batched=True,
+            load_from_cache_file=False,
+            desc="Dataset tokenization process has started."
+        )
+
+    data_train_tokenized = tokenized_datasets[0]
+    data_test_tokenized = tokenized_datasets[1]
 
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
@@ -88,34 +104,55 @@ def main(argv):
         mlm=False,
     )
 
-    train_args = TrainingArguments(
-        output_dir='train_output',
-        evaluation_strategy='steps',
-        save_strategy='no',
-        eval_steps=100,
-        num_train_epochs=1,
+    train_dataloader = DataLoader(
+        data_train_tokenized, collate_fn=collator, batch_size=args.batch_size, pin_memory=True
     )
 
-    trainer = Trainer(
-        args=train_args,
-        model=model,
-        tokenizer=tokenizer,
-        data_collator=collator,
-        train_dataset=data_train_tokenized,
-        eval_dataset=data_test_tokenized,
+    test_dataloader = DataLoader(
+        data_test_tokenized, collate_fn=collator, batch_size=args.batch_size, pin_memory=True
     )
 
-    result = trainer.evaluate()
-    print(f'loss before training: {result["eval_loss"]:.2f}')
+    lr = 3e-5
+    num_epochs = 3
+    gradient_accumulation_steps = 8
 
-    trainer.train()
+    optimizer = AdamW(model.parameters(), lr=lr)
+    lr_scheduler = get_linear_schedule_with_warmup(
+        optimizer=optimizer,
+        num_warmup_steps=0,
+        num_training_steps=(len(train_dataloader) * num_epochs)
+    )
 
-    result = trainer.evaluate()
-    print(f'loss after training: {result["eval_loss"]:.2f}')
+    model, train_dataloader, test_dataloader, optimizer, lr_scheduler = accelerator.prepare(
+        model, train_dataloader, test_dataloader, optimizer, lr_scheduler
+    )
 
-    # Save model
-    trainer.save_state()
-    trainer.save_model()
+    for epoch in range(num_epochs):
+        model.train()
+        total_loss = 0
+        for step, batch in enumerate(tqdm(train_dataloader)):
+            outputs = model(**batch)
+            loss = outputs.loss
+            total_loss += loss.detach().float()
+            accelerator.backward(loss)
+
+            if step % gradient_accumulation_steps == 0:
+                optimizer.step()
+                lr_scheduler.step()
+                optimizer.zero_grad()
+                model.zero_grad()
+
+            # capture batch analytics
+
+        model.eval()
+        eval_loss = 0
+        for step, batch in enumerate(tqdm(test_dataloader)):
+            with torch.no_grad():
+                outputs = model(**batch)
+            loss = outputs.loss
+            eval_loss += loss.detach().float()
+
+        model.save_pretrained(f"trained_model-{epoch}")
 
 
 if __name__ == '__main__':
