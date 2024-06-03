@@ -62,7 +62,7 @@ def main(argv):
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
     ds = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train")
-    ds = ds.shuffle(random.seed(5834))  # Shuffle dataset
+    ds = ds.shuffle(random.seed(5834)).select(range(10000))  # Shuffle dataset and limit sample amount
 
     def tokenize(example):
         return tokenizer(
@@ -72,7 +72,7 @@ def main(argv):
         )
 
     def preprocess(dataset):
-        data = prepper(data=dataset.select(range(10000)))  # Limit amount of samples
+        data = prepper(data=dataset)
         data_train_tokenized = list(map(tokenize, data["train"]))
         data_test_tokenized = list(map(tokenize, data["test"]))
         return [data_train_tokenized, data_test_tokenized]
