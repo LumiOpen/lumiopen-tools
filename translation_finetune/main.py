@@ -33,25 +33,14 @@ def argparser():
 
 
 def prepper(data):
-    data = data.train_test_split(test_size=0.2)
     template = "<|user|>Käännä suomeksi: {} <|assistant|>"
-    formatted_data = {}
 
-    train = []
-    for idx, entry in enumerate(data["train"]["translation"]):
+    formatted_data = []
+    for idx, entry in enumerate(data["translation"]):
         formatted_en = template.format(entry["en"])
         response = entry["fi"]
         final = f"{formatted_en}{response}"
-        train.append(final)
-    formatted_data["train"] = train
-
-    test = []
-    for idx, entry in enumerate(data["test"]["translation"]):
-        formatted_en = template.format(entry["en"])
-        response = entry["fi"]
-        final = f"{formatted_en}{response}"
-        test.append(final)
-    formatted_data["test"] = test
+        formatted_data.append(final)
 
     return formatted_data
 
@@ -61,8 +50,9 @@ def main(argv):
     args = argparser().parse_args(argv[1:])
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
-    ds = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train")
+    ds = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train") # With europarl, everything's in "train"
     ds = ds.shuffle(random.seed(5834)).select(range(10000))  # Shuffle dataset and limit sample amount
+    ds = ds.train_test_split(test_size=0.2)
 
     def tokenize(example):
         return tokenizer(
@@ -72,9 +62,10 @@ def main(argv):
         )
 
     def preprocess(dataset):
-        data = prepper(data=dataset)
-        data_train_tokenized = list(map(tokenize, data["train"]))
-        data_test_tokenized = list(map(tokenize, data["test"]))
+        data_train = prepper(data=ds["train"])
+        data_test = prepper(data=ds["test"])
+        data_train_tokenized = list(map(tokenize, data_train))
+        data_test_tokenized = list(map(tokenize, data_test))
         return [data_train_tokenized, data_test_tokenized]
 
     # print(data["train"][0])
