@@ -66,7 +66,7 @@ def main(argv):
         data_test = prepper(data=ds["test"])
         data_train_tokenized = list(map(tokenize, data_train))
         data_test_tokenized = list(map(tokenize, data_test))
-        return [data_train_tokenized, data_test_tokenized]
+        return {0: data_train_tokenized, 1: data_test_tokenized}
 
     # print(data["train"][0])
     # print(data["test"][0])
