@@ -80,15 +80,12 @@ def main(argv):
             preprocess,
             batched=True,
             load_from_cache_file=False,
-        ).remove_columns("translation")
+        ).remove_columns("translation")["samples"]
         data_test_tokenized = ds["test"].map(
             preprocess,
             batched=True,
             load_from_cache_file=False,
-        ).remove_columns("translation")
-
-        print(f"{data_train_tokenized[0]=}")
-        print(f"{data_test_tokenized[0]=}")
+        ).remove_columns("translation")["samples"]
 
     collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer,
