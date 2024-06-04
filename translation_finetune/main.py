@@ -75,25 +75,26 @@ def main(argv):
     # print(f"{type(data_train_tokenized)}: {data_train_tokenized[0]}")
     # print(f"{type(data_test_tokenized)}: {data_test_tokenized[0]}")
 
-    data_train_tokenized = ds["train"].map(
-        preprocess,
-        batched=True,
-        load_from_cache_file=False,
-    ).remove_columns("translation")
-    data_test_tokenized = ds["test"].map(
-        preprocess,
-        batched=True,
-        load_from_cache_file=False,
-    ).remove_columns("translation")
+    with accelerator.main_process_first():
+        data_train_tokenized = ds["train"].map(
+            preprocess,
+            batched=True,
+            load_from_cache_file=False,
+        ).remove_columns("translation")
+        data_test_tokenized = ds["test"].map(
+            preprocess,
+            batched=True,
+            load_from_cache_file=False,
+        ).remove_columns("translation")
+
+        print(f"{data_train_tokenized[0]=}")
+        print(f"{data_test_tokenized[0]=}")
 
     collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer,
         return_tensors='pt',
         mlm=False,
     )
-
-    print(f"{data_train_tokenized[0]=}")
-    print(f"{data_test_tokenized[0]=}")
 
     train_dataloader = DataLoader(
         data_train_tokenized, collate_fn=collator, batch_size=args.batch_size, pin_memory=True
