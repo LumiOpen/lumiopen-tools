@@ -4,9 +4,10 @@
 import sys
 import torch
 import random
+import logging as vanillalogging
 
 from argparse import ArgumentParser
-from accelerate import Accelerator
+from accelerate import Accelerator, logging
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from transformers import get_linear_schedule_with_warmup
@@ -18,6 +19,12 @@ from transformers import (
     AutoModelForCausalLM,
     DataCollatorForLanguageModeling,
 )
+
+ACCELERATOR = Accelerator()
+
+# idek anymore
+vanillalogging.basicConfig(stream=sys.stdout, level=vanillalogging.INFO)
+LOGGER = vanillalogging.getLogger(logging.get_logger(__name__).name)
 
 DEFAULT_MODEL = 'LumiOpen/Poro-34B'
 
@@ -47,13 +54,14 @@ def prepper(translations):
 
 
 def main(argv):
-    accelerator = Accelerator()
     args = argparser().parse_args(argv[1:])
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
     ds = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train")  # With europarl, everything's in "train"
     ds = ds.shuffle(random.seed(5834)).select(range(10000))  # Shuffle dataset and limit sample amount
     ds = ds.train_test_split(test_size=0.2)
+
+    LOGGER.info("Stock dataset sliced and splitted.")
 
     def tokenize(translations):
         for idx, entry in enumerate(translations["samples"]):
@@ -75,7 +83,7 @@ def main(argv):
     # print(f"{type(data_train_tokenized)}: {data_train_tokenized[0]}")
     # print(f"{type(data_test_tokenized)}: {data_test_tokenized[0]}")
 
-    with accelerator.main_process_first():
+    with ACCELERATOR.main_process_first():
         data_train_tokenized = ds["train"].map(
             preprocess,
             batched=True,
@@ -118,18 +126,21 @@ def main(argv):
             num_training_steps=(len(train_dataloader) * num_epochs)
         )
 
-        model, train_dataloader, test_dataloader, optimizer, lr_scheduler = accelerator.prepare(
+        model, train_dataloader, test_dataloader, optimizer, lr_scheduler = ACCELERATOR.prepare(
             model, train_dataloader, test_dataloader, optimizer, lr_scheduler
         )
 
         for epoch in range(num_epochs):
+            LOGGER.info(f"Starting epoch {epoch} of {num_epochs}.")
             model.train()
             total_loss = 0
+            dl_len = len(train_dataloader)
             for step, batch in enumerate(tqdm(train_dataloader)):
+                LOGGER.info(f"Step {step} out of {dl_len}.")
                 outputs = model(**batch)
                 loss = outputs.loss
                 total_loss += loss.detach().float()
-                accelerator.backward(loss)
+                ACCELERATOR.backward(loss)
 
                 if step % gradient_accumulation_steps == 0:
                     optimizer.step()
@@ -137,19 +148,26 @@ def main(argv):
                     optimizer.zero_grad()
                     model.zero_grad()
 
+                LOGGER.info(f"Current: {total_loss=}.")
+
                 # capture batch analytics
 
+            LOGGER.info("Starting model evaluation.")
             model.eval()
             eval_loss = 0
+            dl_len = len(test_dataloader)
             for step, batch in enumerate(tqdm(test_dataloader)):
+                LOGGER.info(f"Step {step} out of {dl_len}.")
                 with torch.no_grad():
                     outputs = model(**batch)
                 loss = outputs.loss
                 eval_loss += loss.detach().float()
 
+            LOGGER.info(f"Evaluation loss: {eval_loss}.")
+
             model.save_pretrained(f"trained_model-{epoch}")
-        else:
-            print("Skip training because dry run is toggled.")
+    else:
+        LOGGER.info("Skip training because dry run is toggled.")
 
 
 if __name__ == '__main__':
