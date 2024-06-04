@@ -4,16 +4,15 @@
 import sys
 import torch
 import random
-import logging as vanillalogging
 
 from argparse import ArgumentParser
-from accelerate import Accelerator, logging
+from accelerate import Accelerator
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from transformers import get_linear_schedule_with_warmup
 from tqdm import tqdm
 
-from datasets import load_dataset, Dataset
+from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
@@ -21,10 +20,6 @@ from transformers import (
 )
 
 ACCELERATOR = Accelerator()
-
-# idek anymore
-vanillalogging.basicConfig(stream=sys.stdout, level=vanillalogging.INFO)
-LOGGER = vanillalogging.getLogger(logging.get_logger(__name__).name)
 
 DEFAULT_MODEL = 'LumiOpen/Poro-34B'
 
@@ -61,7 +56,7 @@ def main(argv):
     ds = ds.shuffle(random.seed(5834)).select(range(10000))  # Shuffle dataset and limit sample amount
     ds = ds.train_test_split(test_size=0.2)
 
-    LOGGER.info("Stock dataset sliced and splitted.")
+    print("Stock dataset sliced and split.")
 
     def tokenize(translations):
         for idx, entry in enumerate(translations["samples"]):
@@ -131,12 +126,12 @@ def main(argv):
         )
 
         for epoch in range(num_epochs):
-            LOGGER.info(f"Starting epoch {epoch} of {num_epochs}.")
+            print(f"Starting epoch {epoch} of {num_epochs}.")
             model.train()
             total_loss = 0
             dl_len = len(train_dataloader)
             for step, batch in enumerate(tqdm(train_dataloader)):
-                LOGGER.info(f"Step {step} out of {dl_len}.")
+                print(f"Step {step} out of {dl_len}.")
                 outputs = model(**batch)
                 loss = outputs.loss
                 total_loss += loss.detach().float()
@@ -148,26 +143,26 @@ def main(argv):
                     optimizer.zero_grad()
                     model.zero_grad()
 
-                LOGGER.info(f"Current: {total_loss=}.")
+                print(f"Current: {total_loss=}.")
 
                 # capture batch analytics
 
-            LOGGER.info("Starting model evaluation.")
+            print("Starting model evaluation.")
             model.eval()
             eval_loss = 0
             dl_len = len(test_dataloader)
             for step, batch in enumerate(tqdm(test_dataloader)):
-                LOGGER.info(f"Step {step} out of {dl_len}.")
+                print(f"Step {step} out of {dl_len}.")
                 with torch.no_grad():
                     outputs = model(**batch)
                 loss = outputs.loss
                 eval_loss += loss.detach().float()
 
-            LOGGER.info(f"Evaluation loss: {eval_loss}.")
+            print(f"Evaluation loss: {eval_loss}.")
 
             model.save_pretrained(f"trained_model-{epoch}")
     else:
-        LOGGER.info("Skip training because dry run is toggled.")
+        print("Skip training because dry run is toggled.")
 
 
 if __name__ == '__main__':
