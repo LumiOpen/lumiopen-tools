@@ -12,7 +12,7 @@ from torch.optim import AdamW
 from transformers import get_linear_schedule_with_warmup
 from tqdm import tqdm
 
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
@@ -36,10 +36,14 @@ def argparser():
 def prepper(translations):
     template = "<|user|>Käännä suomeksi: {} <|assistant|>"
 
+    new_ds_dict = {
+        "samples": []
+    }
     for entry in translations["translation"]:
         entry["en"] = template.format(entry["en"])
+        new_ds_dict["samples"].append(f"{entry["en"]}{entry["fi"]}")
 
-    return translations
+    return new_ds_dict
 
 
 def main(argv):
@@ -52,15 +56,9 @@ def main(argv):
     ds = ds.train_test_split(test_size=0.2)
 
     def tokenize(translations):
-        for entry in translations["translation"]:
-            entry["en"] = tokenizer(
-                entry["en"],
-                max_length=args.max_length,
-                truncation=True
-            )
-
-            entry["fi"] = tokenizer(
-                entry["fi"],
+        for idx, entry in enumerate(translations["samples"]):
+            translations["samples"][idx] = tokenizer(
+                entry,
                 max_length=args.max_length,
                 truncation=True
             )
@@ -77,36 +75,38 @@ def main(argv):
     # print(f"{type(data_train_tokenized)}: {data_train_tokenized[0]}")
     # print(f"{type(data_test_tokenized)}: {data_test_tokenized[0]}")
 
-    with accelerator.main_process_first():
-        data_train_tokenized = ds["train"].map(
-            preprocess,
-            batched=True,
-            load_from_cache_file=False,
-        )
-        data_test_tokenized = ds["test"].map(
-            preprocess,
-            batched=True,
-            load_from_cache_file=False,
-        )
+    data_train_tokenized = ds["train"].map(
+        preprocess,
+        batched=True,
+        load_from_cache_file=False,
+    ).remove_columns("translation")
+    data_test_tokenized = ds["test"].map(
+        preprocess,
+        batched=True,
+        load_from_cache_file=False,
+    ).remove_columns("translation")
+
+    collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer,
+        return_tensors='pt',
+        mlm=False,
+    )
+
+    print(f"{data_train_tokenized[0]=}")
+    print(f"{data_test_tokenized[0]=}")
+
+    train_dataloader = DataLoader(
+        data_train_tokenized, collate_fn=collator, batch_size=args.batch_size, pin_memory=True
+    )
+
+    test_dataloader = DataLoader(
+        data_test_tokenized, collate_fn=collator, batch_size=args.batch_size, pin_memory=True
+    )
 
     if not args.dry_run:
         model = AutoModelForCausalLM.from_pretrained(
             args.model,
             torch_dtype="auto",
-        )
-
-        collator = DataCollatorForLanguageModeling(
-            tokenizer=tokenizer,
-            return_tensors='pt',
-            mlm=False,
-        )
-
-        train_dataloader = DataLoader(
-            data_train_tokenized, collate_fn=collator, batch_size=args.batch_size, pin_memory=True
-        )
-
-        test_dataloader = DataLoader(
-            data_test_tokenized, collate_fn=collator, batch_size=args.batch_size, pin_memory=True
         )
 
         lr = 3e-5
