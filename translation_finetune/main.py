@@ -30,6 +30,7 @@ def argparser():
     ap.add_argument('--verbose', action='store_true')
     ap.add_argument('--max-length', type=int, default=1024)
     ap.add_argument("--batch_size", "-b", type=int, default=16)
+    ap.add_argument("--epochs", "-e", type=int, default=4)
     ap.add_argument("--dry_run", "-d", action="store_true")
     ap.add_argument('--model', default=DEFAULT_MODEL)
     return ap
@@ -55,8 +56,6 @@ def main(argv):
     ds = load_dataset("Helsinki-NLP/europarl", "en-fi", split="train")  # With europarl, everything's in "train"
     ds = ds.shuffle(random.seed(5834)).select(range(10000))  # Shuffle dataset and limit sample amount
     ds = ds.train_test_split(test_size=0.2)
-
-    print("Stock dataset sliced and split.")
 
     def tokenize(translations):
         for idx, entry in enumerate(translations["samples"]):
@@ -110,8 +109,8 @@ def main(argv):
             torch_dtype="auto",
         )
 
+        num_epochs = args.epochs
         lr = 3e-5
-        num_epochs = 3
         gradient_accumulation_steps = 8
 
         optimizer = AdamW(model.parameters(), lr=lr)
@@ -126,12 +125,10 @@ def main(argv):
         )
 
         for epoch in range(num_epochs):
-            print(f"Starting epoch {epoch} of {num_epochs}.")
             model.train()
             total_loss = 0
             dl_len = len(train_dataloader)
             for step, batch in enumerate(tqdm(train_dataloader)):
-                print(f"Step {step} out of {dl_len}.")
                 outputs = model(**batch)
                 loss = outputs.loss
                 total_loss += loss.detach().float()
@@ -143,26 +140,18 @@ def main(argv):
                     optimizer.zero_grad()
                     model.zero_grad()
 
-                print(f"Current: {total_loss=}.")
-
                 # capture batch analytics
 
-            print("Starting model evaluation.")
             model.eval()
             eval_loss = 0
             dl_len = len(test_dataloader)
             for step, batch in enumerate(tqdm(test_dataloader)):
-                print(f"Step {step} out of {dl_len}.")
                 with torch.no_grad():
                     outputs = model(**batch)
                 loss = outputs.loss
                 eval_loss += loss.detach().float()
 
-            print(f"Evaluation loss: {eval_loss}.")
-
             model.save_pretrained(f"trained_model-{epoch}")
-    else:
-        print("Skip training because dry run is toggled.")
 
 
 if __name__ == '__main__':
