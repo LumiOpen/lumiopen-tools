@@ -41,7 +41,7 @@ def prepper(translations):
     }
     for entry in translations["translation"]:
         entry["en"] = template.format(entry["en"])
-        new_ds_dict["samples"].append(f"{entry["en"]}{entry["fi"]}")
+        new_ds_dict["samples"].append(f"{entry['en']}{entry['fi']}")
 
     return new_ds_dict
 
