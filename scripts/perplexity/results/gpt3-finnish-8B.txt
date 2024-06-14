@@ -1,0 +1,12 @@
+fin_Latn.devtest mean loss: 3.89
+fin_Latn.devtest mean ppl : 73.31
+fin_Latn.devtest mean cppl: 1.94
+eng_Latn.devtest mean loss: 3.20
+eng_Latn.devtest mean ppl : 29.57
+eng_Latn.devtest mean cppl: 2.55
+code_starcoderdata-test-1M.txt mean loss: 5.01
+code_starcoderdata-test-1M.txt mean ppl : 1680.65
+code_starcoderdata-test-1M.txt mean cppl: 25.09
+overall mean loss: 4.03
+overall mean ppl : 594.51
+overall mean cppl: 9.86
