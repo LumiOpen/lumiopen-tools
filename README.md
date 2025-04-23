@@ -73,6 +73,11 @@ encoded = tokenizer('Hi, my name is', return_tensors='pt').to(model.device)
 output = model.generate(**encoded)
 tokenizer.decode(output[0])
 ```
+generation using gradio chat interface:
+
+```
+python gradio-chat.py --model <path_to_local_model_or_HF_name>
+```
 
 ## Quickstart for puhti
 
